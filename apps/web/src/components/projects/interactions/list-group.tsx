@@ -64,6 +64,7 @@ export interface ListGroupProps {
 		},
 	) => Promise<void>;
 	onCreateSprint?: () => void;
+	onTaskDoubleClick?: (task: Task) => void;
 	/** Extra fields merged into the create-task payload (e.g. sprint_id) */
 	extraCreateFields?: TaskFieldUpdate;
 	columnBy?: string;
@@ -107,6 +108,7 @@ export function ListGroup({
 	sprint,
 	onStartSprint,
 	onCreateSprint,
+		onTaskDoubleClick,
 	extraCreateFields,
 	columnBy,
 	onCollapseChange,
@@ -401,6 +403,7 @@ export function ListGroup({
 				isDragging={draggingId === task.id}
 				canEdit={canEdit}
 				onUpdateTaskField={onUpdateTaskField}
+				onDoubleClick={onTaskDoubleClick ? () => onTaskDoubleClick(task) : undefined}
 			/>
 		</div>
 	);

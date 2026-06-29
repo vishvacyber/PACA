@@ -1,5 +1,5 @@
 import { Check, GripVertical, Layers, Link, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getTaskTypeIconComponent } from "@/components/projects/task-types/task-type-icons";
 import {
@@ -21,6 +21,7 @@ import type {
 	TaskType,
 } from "@/lib/project-api";
 import { cn } from "@/lib/utils";
+import { consumeToggled, markToggled } from "@/lib/sprint-toggle-tracker";
 
 import {
 	getPriority,
@@ -46,6 +47,7 @@ interface TaskCardProps {
 	isDragging?: boolean;
 	canEdit?: boolean;
 	onUpdate?: (taskId: string, payload: UpdatePayload) => void;
+	onDoubleClick?: () => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -70,8 +72,13 @@ export function TaskCard({
 	isDragging,
 	canEdit,
 	onUpdate,
+		onDoubleClick,
 }: TaskCardProps) {
 	const [typePopoverOpen, setTypePopoverOpen] = useState(false);
+	const [isAnimating, setIsAnimating] = useState(false);
+	const [showEnter, setShowEnter] = useState(() => consumeToggled(task.id));
+	const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	useEffect(() => { if (showEnter) { const t = setTimeout(() => setShowEnter(false), 500); return () => clearTimeout(t); } }, [showEnter]);
 	const taskType = taskTypes.find((t) => t.id === task.task_type_id);
 	const assignee = task.assignee_id
 		? members.find((m) => m.id === task.assignee_id)
@@ -600,12 +607,29 @@ export function TaskCard({
 			draggable={canEdit}
 			onDragStart={onDragStart}
 			onDragEnd={onDragEnd}
-			onClick={onClick}
+			onClick={() => {
+				if (clickTimer.current) return;
+				clickTimer.current = setTimeout(() => {
+					onClick?.();
+					clickTimer.current = null;
+				}, 280);
+			}}
+			onDoubleClick={() => {
+				if (clickTimer.current) {
+					clearTimeout(clickTimer.current);
+					clickTimer.current = null;
+				}
+				markToggled(task.id);
+				setIsAnimating(true);
+				setTimeout(() => { onDoubleClick?.(); }, 180);
+			}}
 			className={cn(
 				"group relative rounded-xl border border-border/30 bg-card p-3 shadow-xs cursor-pointer transition-all duration-150 select-none",
 				"hover:border-border/50 hover:shadow-sm",
 				isDragging && "opacity-50 ring-2 ring-primary/30 shadow-lg rotate-1",
 				canEdit && "cursor-grab active:cursor-grabbing",
+				isAnimating && (task.sprint_id ? "animate-sprint-exit-down" : "animate-sprint-exit-up"),
+				showEnter && (task.sprint_id ? "animate-sprint-enter-down" : "animate-sprint-enter-up"),
 			)}
 		>
 			{canEdit && (
