@@ -18,6 +18,7 @@ function BacklogPage() {
 	const canCreate = hasProjectPermission("tasks.write");
 	const canEdit = hasProjectPermission("tasks.write");
 	const canManageViews = hasProjectPermission("projects.write");
+	const canManageSprints = hasProjectPermission("sprints.write");
 
 	return (
 		<InteractionLayout
@@ -28,6 +29,7 @@ function BacklogPage() {
 			canCreate={canCreate}
 			canEdit={canEdit}
 			canManageViews={canManageViews}
+			canManageSprints={canManageSprints}
 			sprintId={null}
 			context="backlog"
 		/>

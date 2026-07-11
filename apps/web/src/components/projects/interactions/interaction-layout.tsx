@@ -207,6 +207,8 @@ interface InteractionLayoutProps {
 	canCreate: boolean;
 	canEdit: boolean;
 	canManageViews: boolean;
+	/** Gates sprint create/start actions (requires sprints.write). */
+	canManageSprints?: boolean;
 	onTaskClick?: (task: Task) => void;
 	sprintId?: string | null;
 	/** The view context — drives which API bucket is used for views */
@@ -270,6 +272,7 @@ export function InteractionLayout({
 	canCreate,
 	canEdit,
 	canManageViews,
+	canManageSprints = false,
 	onTaskClick,
 	sprintId,
 	context,
@@ -1310,7 +1313,7 @@ export function InteractionLayout({
 						{title}
 					</h1>
 					{headerActions}
-					{context === "backlog" && canCreate && (
+					{context === "backlog" && canManageSprints && (
 						<button
 							type="button"
 							onClick={handleNewSprint}
@@ -1605,7 +1608,7 @@ export function InteractionLayout({
 						onUpdateTaskField={canEdit ? handleMoveToColumn : undefined}
 						sprints={context === "backlog" ? sprints : undefined}
 						onStartSprint={
-							context === "backlog" && canCreate
+							context === "backlog" && canManageSprints
 								? async (sid, payload) => {
 										await updateSprintMutation.mutateAsync({
 											sprintId: sid,
@@ -1619,7 +1622,9 @@ export function InteractionLayout({
 								: undefined
 						}
 						onCreateSprint={
-							context === "backlog" && canCreate ? handleNewSprint : undefined
+							context === "backlog" && canManageSprints
+								? handleNewSprint
+								: undefined
 						}
 						onCollapseChange={
 							isRealView && activeView
